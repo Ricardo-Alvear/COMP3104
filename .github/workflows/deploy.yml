@@ -1,0 +1,41 @@
+name: CI/CD Pipeline - GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (Stable)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'yarn'
+
+      - name: Install Dependencies & Yarn
+        run: |
+          npm install -g yarn
+          yarn install
+
+      - name: Build Application & Setup SPA Routing
+        run: |
+          yarn build
+          # Prevents 404 errors on single-page application refresh by copying index.html to 404.html
+          cp build/index.html build/404.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
